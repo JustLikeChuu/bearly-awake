@@ -188,7 +188,7 @@ with st.container(border=False):
         else:
             st.write("No data")
 
-# --- Live Sensors (Simulated) ---
+    # --- Live Sensors (Simulated) ---
 st.markdown("---")
 with st.container(border=False):
     st.subheader("Live Sensors")
@@ -233,13 +233,13 @@ def process_json_data(data):
     max_temp = max(temp_data)
 
     # noisy if score above 0.1
-    noise_level_score = (sum([1 for record in data if record["noise"] >= 560]) / counts)
+    noise_level_score = (sum([1 for record in data if record["sound"] >= 560]) / counts)
 
     # % of each sleep phase: light, deep, rem, awake
     sleep_phase = [50, 30, 15, 5]
 
     # % of times moved over entire sleep duration
-    movement_percentage = (sum([1 for record in data if record["movement"]]) / counts) * 100
+    movement_percentage = (sum([1 for record in data if record["shock"]]) / counts) * 100
 
     # Create a string summary
     summary_text = (
