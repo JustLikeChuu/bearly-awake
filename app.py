@@ -4,6 +4,8 @@ import json
 from datetime import datetime, timedelta
 import os
 import base64
+from collections import Counter
+import matplotlib.pyplot as plt
 
 # Load the CSS file
 def local_css(file_name):
@@ -111,16 +113,78 @@ with st.container(border=False):
 st.markdown("---")
 st.header("Dashboard")
 
+def compute_sleep_quality(duration, restlessness):
+    # Duration score: 8 hours is ideal (full 70 points), less or more reduces score
+    duration_score = max(0, 70 - abs(8 - duration) * 10)
+    # Restlessness score: 1 is best (30 points), 5 is worst (0 points)
+    restlessness_score = max(0, 30 - (restlessness - 1) * 7.5)
+    return round(duration_score + restlessness_score, 1)
+
+def compute_energy_score(duration, restlessness):
+    # Example: 8 hours & restlessness 1 = 100, less sleep or more restlessness reduces score
+    duration_component = min(duration / 8, 1) * 70  # up to 70 points for duration
+    restlessness_component = max(0, (6 - restlessness) / 5) * 30  # up to 30 points for calmness
+    return round(duration_component + restlessness_component, 1)
+
 logs = load_data()
 avg_sleep = 0
+avg_quality = 0
+avg_energy = 0
 if logs:
     avg_sleep = sum(log['duration'] for log in logs) / len(logs)
+    quality_scores = [
+        compute_sleep_quality(log['duration'], log.get('restlessness', 2))
+        for log in logs
+    ]
+    avg_quality = sum(quality_scores) / len(quality_scores)
+    energy_scores = [
+        compute_energy_score(log['duration'], log.get('restlessness', 2))
+        for log in logs
+    ]
+    avg_energy = sum(energy_scores) / len(energy_scores)
+
+# Aggregate sleep phases for pie chart
+phase_counts = Counter()
+for log in logs:
+    for phase in log.get("phases", []):
+        phase_counts[phase] += 1
 
 with st.container(border=False):
     col1, col2, col3 = st.columns([1, 1, 1])
-    with col2:
-        st.write("Avg Sleep")
+    with col1:
+        st.write("Average Sleep")
         st.title(f"😴 {round(avg_sleep, 1)}h")
+    with col2:
+        st.write("Sleep Phase Breakdown")
+        if phase_counts:
+            fig, ax = plt.subplots()
+            ax.pie(
+                list(phase_counts.values()),
+                labels=list(phase_counts.keys()),
+                autopct='%1.1f%%',
+                startangle=90,
+                counterclock=False
+            )
+            ax.axis('equal')  # Equal aspect ratio ensures the pie is drawn as a circle.
+            st.pyplot(fig)
+        else:
+            st.write("No phase data")
+    with col3:
+        st.write("Energy Score")
+        if avg_energy > 0:
+            fig2, ax2 = plt.subplots()
+            ax2.pie(
+                [avg_energy, 100 - avg_energy],
+                labels=[f"Energy ({round(avg_energy,1)})", ""],
+                colors=["#FFD700", "#E0E0E0"],
+                startangle=90,
+                counterclock=False,
+                wedgeprops=dict(width=0.4)
+            )
+            ax2.axis('equal')
+            st.pyplot(fig2)
+        else:
+            st.write("No data")
 
 # --- Live Sensors (Simulated) ---
 st.markdown("---")
@@ -175,21 +239,8 @@ with st.container(border=False):
                 tip_message += " " + tips["high_restlessness"]
             else:
                 tip_message += " " + tips["low_restlessness"]
-
-            # Hardcoded array of uplifting messages
-            uplifting_messages = [
-                "You are amazing! Keep up the great work.",
-                "Every small step towards better sleep is a victory.",
-                "Remember to be kind to yourself. You're doing great.",
-                "Your well-being is worth the effort."
-            ]
-
-            import random
-            uplifting_message = random.choice(uplifting_messages)
-
             # Display messages
             st.success(f"**Personalized Tip:** {tip_message}")
-            st.info(f"{uplifting_message}")
 
 # --- Sleep History & Analytics ---
 st.markdown("---")
