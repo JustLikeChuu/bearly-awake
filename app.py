@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import firebase_admin
 import json
 from datetime import datetime, timedelta
 import os
