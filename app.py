@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-import firebase_admin
 import json
 from datetime import datetime, timedelta
 import os
@@ -87,12 +86,12 @@ with st.container(border=False):
         st.image("assets/bear image.jpg", width=300)
         st.write("")  # Spacer
         if not app_state["is_sleeping"]:
-            if st.button("🌙 Start Sleep", use_container_width=True):
+            if st.button("🌙 Start Sleep", key="start_sleep", use_container_width=True):
                 app_state["is_sleeping"] = True
                 app_state["sleep_start_time"] = datetime.now()
                 save_state(app_state)
         else:
-            if st.button("💤 End Sleep", use_container_width=True, type="primary"):
+            if st.button("💤 End Sleep", key="end_sleep", use_container_width=True, type="primary"):
                 app_state["is_sleeping"] = False
                 sleep_duration = (datetime.now() - app_state["sleep_start_time"]).total_seconds() / 3600
                 restlessness = 2  # Placeholder for a real restlessness score
@@ -147,14 +146,52 @@ with st.container(border=False):
 st.markdown("---")
 with st.container(border=False):
     st.subheader("AI Sleep Assistant")
-    if st.button("Generate Personalized Routine", use_container_width=True):
-        st.markdown("""
-        ### Personalized Routine
-        Based on your last few nights of sleep, we recommend the following:
-        - **Maintain a consistent bedtime:** Try to go to sleep around 10:30 PM.
-        - **Minimize screen time:** Avoid your phone for at least 30 minutes before bed.
-        - **Take a warm bath:** A warm bath can help you relax and fall asleep faster.
-        """)
+    log_button = st.button("Generate Personalized Routine", key="gen_routine", use_container_width=True)
+        # Get the most recent sleep duration from logs
+    sleep_duration = None
+    restlessness_score = None
+    if logs:
+        last_log = logs[-1]
+        sleep_duration = last_log.get("duration", 0)
+        restlessness_score = last_log.get("restlessness", 2)  # Default to 2 if not present
+
+    if log_button:
+        if not sleep_duration or sleep_duration <= 0:
+            st.error("No recent sleep data available. Please log some sleep first.")
+        else:
+            # Simulate AI logic for a personalized tip
+            tips = {
+                "low_duration": "Your duration was a bit low. Try to get to bed 30 minutes earlier tonight.",
+                "high_duration": "Great job! A longer sleep duration can do wonders for your health.",
+                "high_restlessness": "Feeling restless? Try a 10-minute meditation before bed to calm your mind.",
+                "low_restlessness": "A calm night! Consistency is key for deep, restorative sleep.",
+            }
+            tip_message = ""
+            if sleep_duration < 7.0:
+                tip_message = tips["low_duration"]
+            else:
+                tip_message = tips["high_duration"]
+            
+            if restlessness_score > 3:
+                tip_message += " " + tips["high_restlessness"]
+            else:
+                tip_message += " " + tips["low_restlessness"]
+
+            # Hardcoded array of uplifting messages
+            uplifting_messages = [
+                "You are amazing! Keep up the great work.",
+                "Every small step towards better sleep is a victory.",
+                "Remember to be kind to yourself. You're doing great.",
+                "Your well-being is worth the effort."
+            ]
+
+            import random
+            uplifting_message = random.choice(uplifting_messages)
+
+            # Display messages
+            st.success(f"**Personalized Tip:** {tip_message}")
+            st.info(f"{uplifting_message}")
+
 
 # --- Sleep History & Analytics ---
 st.markdown("---")
@@ -163,10 +200,10 @@ st.header("Sleep History & Analytics")
 if not logs:
     st.write("No sleep logs yet. Start tracking your sleep to see your history here!")
 else:
-    for log in reversed(logs):
+    for i, log in enumerate(reversed(logs)):
         date_str = datetime.fromisoformat(log["date"]).strftime("%m/%d/%Y")
-        
-        with st.expander(f"**{date_str}** - {log['duration']} hours"):
+        label = f"{date_str} - {log['duration']}h #{i}-{log['date']}-{log['restlessness']}"
+        with st.expander(label, expanded=False):
             st.write(f"**Data Points:** {log['data_points']} points")
             st.write(f"**Restlessness:** {log['restlessness']}/5")
             st.write(f"**Sleep Phases:** {', '.join(log['phases'])}")
@@ -176,7 +213,7 @@ st.markdown("---")
 with st.container(border=False):
     col1, col2, col3 = st.columns([1, 1, 1])
     with col2:
-        if st.button("🧹 Reset All (Clear Data)", type="secondary"):
+        if st.button("🧹 Reset All (Clear Data)", key="reset_all", type="secondary"):
             # Remove data files if they exist
             if os.path.exists(DATA_FILE):
                 os.remove(DATA_FILE)

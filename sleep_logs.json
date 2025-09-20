@@ -1,0 +1,14 @@
+[
+    {
+        "date": "2025-09-20T18:43:32.298937",
+        "duration": 1.05,
+        "restlessness": 2,
+        "data_points": 7,
+        "phases": [
+            "light",
+            "deep",
+            "rem",
+            "awake"
+        ]
+    }
+]
