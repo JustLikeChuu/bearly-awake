@@ -313,14 +313,16 @@ else:
     for i, log in enumerate(reversed(logs)):
         # Format date
         date_str = datetime.fromisoformat(log["date"]).strftime("%m/%d/%Y %H:%M:%S")
-        # Make label unique by combining date, duration, and full timestamp
-        label = f"{date_str} - {log['duration']} hours"
-        # Create expander
-        with st.expander(label, expanded=False):
-            st.write(f"**Data Points:** {log['data_points']} points")
-            st.write(f"**Restlessness:** {log['restlessness']}/5")
-            st.write(f"**Sleep Phases:** {', '.join(log['phases'])}")
+        label = f"{date_str} - {log.get('duration', 'N/A')} hours"
 
+        with st.expander(label, expanded=False):
+            st.write(f"**Duration:** {log.get('duration', 'N/A')} hours")
+            st.write(f"**Restlessness:** {log.get('restlessness', 'N/A')}/5")
+            st.write(f"**Noise Level:** {log.get('noise', 'N/A')}")
+            st.write(f"**Temperature:** {log.get('temperature', 'N/A')}°C")
+            st.write(f"**Movement:** {log.get('movement', 'N/A')}")
+            st.write(f"**Shock Detected:** {log.get('shock', 'N/A')}")
+            st.write(f"**Sound Value:** {log.get('sound', 'N/A')}")
 
 # --- Reset/Clear All Button ---
 st.markdown("---")
