@@ -3,6 +3,30 @@ import pandas as pd
 import json
 from datetime import datetime, timedelta
 import os
+import base64
+
+# Load the CSS file
+def local_css(file_name):
+    with open(file_name) as f:
+        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+
+def set_bg_from_local(image_file):
+    with open(image_file, "rb") as img:
+        encoded = base64.b64encode(img.read()).decode()
+    st.markdown(
+        f"""
+        <style>
+        .stApp {{
+            background: url("data:image/jpeg;base64,{encoded}") no-repeat center center fixed;
+            background-size: cover;
+        }}
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+local_css("appCSS.css")
+set_bg_from_local("assets/background.png")
 
 # --- Helper Functions for Data Storage ---
 DATA_FILE = "sleep_logs.json"
@@ -52,18 +76,15 @@ st.set_page_config(
 # --- Header Section ---
 st.title("Bear-ly Awake 🐻")
 st.markdown("Your Intelligent Sleep Companion!")
-
 st.markdown("---")
+
+# --- Bear Container with Buttons ---
 # --- Bear Container with Buttons ---
 with st.container(border=False):
-    col_img, col_buttons = st.columns([0.5, 2])
-    
-    with col_img:
-        st.image("assets/bear image.jpg")
-    
-    with col_buttons:
-        st.write("") # Spacer
-        col_sleep = st.columns(2)
+    col1, col2, col3 = st.columns([1, 1, 1])
+    with col2:
+        st.image("assets/bear image.jpg", width=300)
+        st.write("")  # Spacer
         if not app_state["is_sleeping"]:
             if st.button("🌙 Start Sleep", use_container_width=True):
                 app_state["is_sleeping"] = True
@@ -73,20 +94,17 @@ with st.container(border=False):
             if st.button("💤 End Sleep", use_container_width=True, type="primary"):
                 app_state["is_sleeping"] = False
                 sleep_duration = (datetime.now() - app_state["sleep_start_time"]).total_seconds() / 3600
-                restlessness = 2 # Placeholder for a real restlessness score
-                
-                # Logic to add the log
+                restlessness = 2  # Placeholder for a real restlessness score
                 new_log = {
                     "date": datetime.now().isoformat(),
                     "duration": round(sleep_duration, 2),
                     "restlessness": restlessness,
-                    "data_points": 7, # Simulated data points
-                    "phases": ["light", "deep", "rem", "awake"] # Simulated phases
+                    "data_points": 7,
+                    "phases": ["light", "deep", "rem", "awake"]
                 }
                 logs = load_data()
                 logs.append(new_log)
                 save_data(logs)
-                
                 app_state["sleep_start_time"] = None
                 save_state(app_state)
 
@@ -100,8 +118,10 @@ if logs:
     avg_sleep = sum(log['duration'] for log in logs) / len(logs)
 
 with st.container(border=False):
-    st.write("Avg Sleep")
-    st.title(f"😴 {round(avg_sleep, 1)}h")
+    col1, col2, col3 = st.columns([1, 1, 1])
+    with col2:
+        st.write("Avg Sleep")
+        st.title(f"😴 {round(avg_sleep, 1)}h")
 
 # --- Live Sensors (Simulated) ---
 st.markdown("---")
@@ -152,12 +172,14 @@ else:
 
 # --- Reset/Clear All Button ---
 st.markdown("---")
-
-if st.button("🧹 Reset All (Clear Data)", type="secondary"):
-    # Remove data files if they exist
-    if os.path.exists(DATA_FILE):
-        os.remove(DATA_FILE)
-    if os.path.exists(STATE_FILE):
-        os.remove(STATE_FILE)
-    st.success("All data has been cleared. Please refresh the page.")
-    st.stop()
+with st.container(border=False):
+    col1, col2, col3 = st.columns([1, 1, 1])
+    with col2:
+        if st.button("🧹 Reset All (Clear Data)", type="secondary"):
+            # Remove data files if they exist
+            if os.path.exists(DATA_FILE):
+                os.remove(DATA_FILE)
+            if os.path.exists(STATE_FILE):
+                os.remove(STATE_FILE)
+            st.success("All data has been cleared. Please refresh the page.")
+            st.stop()
