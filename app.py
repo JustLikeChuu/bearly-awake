@@ -59,7 +59,7 @@ with st.container(border=True):
     col_img, col_buttons = st.columns([0.5, 2])
     
     with col_img:
-        st.image("https://placehold.co/100x100/fecaca/ffffff?text=🐻")
+        st.image("assets/bear image.jpg")
     
     with col_buttons:
         st.write("") # Spacer
