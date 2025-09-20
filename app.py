@@ -1,11 +1,12 @@
 import streamlit as st
 import pandas as pd
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
 
 # --- Helper Functions for Data Storage ---
 DATA_FILE = "sleep_logs.json"
+STATE_FILE = "app_state.json"
 
 def load_data():
     """Loads sleep logs from a JSON file."""
@@ -19,135 +20,158 @@ def save_data(data):
     with open(DATA_FILE, "w") as f:
         json.dump(data, f, indent=4)
 
-# --- App Content ---
+def load_state():
+    """Loads app state from a JSON file."""
+    if not os.path.exists(STATE_FILE):
+        return {"is_sleeping": False, "hug_count": 0, "sleep_start_time": None}
+    with open(STATE_FILE, "r") as f:
+        state = json.load(f)
+        # Convert sleep_start_time back to datetime object
+        if state["sleep_start_time"]:
+            state["sleep_start_time"] = datetime.fromisoformat(state["sleep_start_time"])
+        return state
+
+def save_state(state):
+    """Saves app state to a JSON file."""
+    # Convert sleep_start_time to ISO format string for JSON serialization
+    if state["sleep_start_time"]:
+        state["sleep_start_time"] = state["sleep_start_time"].isoformat()
+    with open(STATE_FILE, "w") as f:
+        json.dump(state, f, indent=4)
+
+# --- App Initialization and State Management ---
+app_state = load_state()
+
+# --- App Layout ---
 st.set_page_config(
     page_title="Bear-ly Awake",
     page_icon="🐻",
     layout="centered",
 )
 
-st.title("Bear-ly Awake 🐻")
-st.markdown("Your comfort companion for better sleep.")
+# --- Header Section ---
+st.title("Bear-ly Awake")
+st.markdown("Your intelligent sleep companion")
+
 st.markdown("---")
-
-# --- Form to Log Sleep ---
-st.header("Log Your Night")
-
-col1, col2 = st.columns(2)
-with col1:
-    sleep_duration = st.number_input(
-        "Sleep Duration (hours)",
-        min_value=0.0,
-        step=0.5,
-        format="%.1f",
-        placeholder="e.g., 7.5",
-    )
-with col2:
-    restlessness_score = st.number_input(
-        "Restlessness (1-5)",
-        min_value=1,
-        max_value=5,
-        step=1,
-        placeholder="e.g., 2",
-    )
-
-log_button = st.button(
-    "Log Sleep",
-    use_container_width=True,
-    help="Click to log your sleep and get a personalized tip.",
-)
-
-# --- Logic for Logging and Displaying Messages ---
-if log_button:
-    if sleep_duration <= 0 or restlessness_score not in range(1, 6):
-        st.error("Please enter a valid sleep duration and restlessness score.")
-    else:
-        # Simulate AI logic for a personalized tip
-        tips = {
-            "low_duration": "Your duration was a bit low. Try to get to bed 30 minutes earlier tonight.",
-            "high_duration": "Great job! A longer sleep duration can do wonders for your health.",
-            "high_restlessness": "Feeling restless? Try a 10-minute meditation before bed to calm your mind.",
-            "low_restlessness": "A calm night! Consistency is key for deep, restorative sleep.",
-        }
-
-        tip_message = ""
-        if sleep_duration < 7.0:
-            tip_message = tips["low_duration"]
-        else:
-            tip_message = tips["high_duration"]
-
-        if restlessness_score > 3:
-            tip_message += " " + tips["high_restlessness"]
-        else:
-            tip_message += " " + tips["low_restlessness"]
-
-        # Hardcoded array of uplifting messages
-        uplifting_messages = [
-            "You are amazing! Keep up the great work.",
-            "Every small step towards better sleep is a victory.",
-            "Remember to be kind to yourself. You're doing great.",
-            "Your well-being is worth the effort."
-        ]
-
-        import random
-        uplifting_message = random.choice(uplifting_messages)
-
-        # Display messages
-        st.success(f"**Personalized Tip:** {tip_message}")
-        st.info(f"**Uplifting Message:** {uplifting_message}")
-
-        # Save data
-        new_log = {
-            "date": datetime.now().isoformat(),
-            "duration": sleep_duration,
-            "restlessness": restlessness_score,
-        }
-        logs = load_data()
-        logs.append(new_log)
-        save_data(logs)
-
-# --- Display Sleep History ---
-st.markdown("---")
-st.header("Your Sleep Log")
-
-sleep_data = load_data()
-if not sleep_data:
-    st.write("No sleep logs yet. Log your first night above!")
-else:
-    df = pd.DataFrame(sleep_data)
-    df["date"] = pd.to_datetime(df["date"]).dt.strftime("%Y-%m-%d %H:%M")
-    df.rename(columns={
-        "date": "Date",
-        "duration": "Duration (hours)",
-        "restlessness": "Restlessness (1-5)",
-    }, inplace=True)
+# --- Bear Container with Buttons ---
+with st.container(border=True):
+    col_img, col_buttons = st.columns([0.5, 2])
     
-    st.dataframe(df, use_container_width=True)
+    with col_img:
+        st.image("https://placehold.co/100x100/fecaca/ffffff?text=🐻")
+    
+    with col_buttons:
+        st.write("") # Spacer
+        col_hug, col_sleep = st.columns(2)
+        with col_hug:
+            if st.button("❤️ Give Hug", use_container_width=True):
+                app_state["hug_count"] += 1
+                save_state(app_state)
+        with col_sleep:
+            if not app_state["is_sleeping"]:
+                if st.button("🌙 Start Sleep", use_container_width=True):
+                    app_state["is_sleeping"] = True
+                    app_state["sleep_start_time"] = datetime.now()
+                    save_state(app_state)
+            else:
+                if st.button("💤 End Sleep", use_container_width=True, type="primary"):
+                    app_state["is_sleeping"] = False
+                    sleep_duration = (datetime.now() - app_state["sleep_start_time"]).total_seconds() / 3600
+                    restlessness = 2 # Placeholder for a real restlessness score
+                    
+                    # Logic to add the log
+                    new_log = {
+                        "date": datetime.now().isoformat(),
+                        "duration": round(sleep_duration, 2),
+                        "restlessness": restlessness,
+                        "data_points": 7, # Simulated data points
+                        "phases": ["light", "deep", "rem", "awake"] # Simulated phases
+                    }
+                    logs = load_data()
+                    logs.append(new_log)
+                    save_data(logs)
+                    
+                    app_state["sleep_start_time"] = None
+                    save_state(app_state)
 
-# Add a simple audio player for the heartbeat sound simulation
+# --- Key Metrics Section ---
 st.markdown("---")
-st.header("Activate Your Bear")
-st.markdown("Click the button below to simulate your bear's comforting heartbeat.")
+st.header("Dashboard")
 
-if st.button("Play Soothing Sound", use_container_width=True):
-    import base64
-    from io import BytesIO
-    import numpy as np
-    import soundfile as sf
+metrics_cols = st.columns(3)
+logs = load_data()
+avg_sleep = 0
+if logs:
+    avg_sleep = sum(log['duration'] for log in logs) / len(logs)
 
-    # Generate a simple sine wave to mimic a heartbeat sound
-    sample_rate = 44100
-    frequency = 80 # Hz, a low, thumpy sound
-    duration = 0.5 # seconds
-    t = np.linspace(0., duration, int(sample_rate * duration))
-    # Simple rising and falling gain to mimic a heartbeat
-    gain_ramp = np.concatenate([np.linspace(0, 1, int(t.size/2)), np.linspace(1, 0, int(t.size/2))])
-    audio_data = np.sin(2. * np.pi * frequency * t) * gain_ramp
+with metrics_cols[0]:
+    with st.container(border=True):
+        st.write("Avg Sleep")
+        st.title(f"😴 {round(avg_sleep, 1)}h")
+with metrics_cols[1]:
+    with st.container(border=True):
+        st.write("Temperature")
+        st.title("🌡️ 98.6°C")
+with metrics_cols[2]:
+    with st.container(border=True):
+        st.write("Total Hugs")
+        st.title(f"⚡️ {app_state['hug_count']}")
 
-    wav_io = BytesIO()
-    sf.write(wav_io, audio_data, sample_rate, format='WAV')
-    wav_io.seek(0)
-    audio_base64 = base64.b64encode(wav_io.read()).decode()
+# --- Live Sensors (Simulated) and AI Assistant ---
+st.markdown("---")
+col_live, col_ai = st.columns(2)
 
-    st.markdown(f'<audio autoplay="true" src="data:audio/wav;base64,{audio_base64}"></audio>', unsafe_allow_html=True)
-    st.write("Playing a calming sound...")
+with col_live:
+    with st.container(border=True):
+        st.subheader("Live Sensors")
+        if app_state["is_sleeping"]:
+            st.success("MONITORING")
+            st.markdown("Heart Rate: **68 BPM**")
+            st.markdown("Temperature: **98.4°F**")
+            st.markdown("Movement: **3/10**")
+            st.markdown("Sleep Phase: **AWAKE**")
+            st.markdown("Noise: NONE")
+        else:
+            st.warning("Not monitoring.")
+            st.markdown("Heart Rate: --")
+            st.markdown("Temperature: --")
+            st.markdown("Movement: --")
+            st.markdown("Sleep Phase: --")
+            st.markdown("Noise: --")
+with col_ai:
+    with st.container(border=True):
+        st.subheader("AI Sleep Assistant")
+        if st.button("Generate Personalized Routine", use_container_width=True):
+            st.markdown("""
+            ### Personalized Routine
+            Based on your last few nights of sleep, we recommend the following:
+            - **Maintain a consistent bedtime:** Try to go to sleep around 10:30 PM.
+            - **Minimize screen time:** Avoid your phone for at least 30 minutes before bed.
+            - **Take a warm bath:** A warm bath can help you relax and fall asleep faster.
+            """)
+
+# --- Sleep History & Analytics ---
+st.markdown("---")
+st.header("Sleep History & Analytics")
+
+if not logs:
+    st.write("No sleep logs yet. Start tracking your sleep to see your history here!")
+else:
+    for log in reversed(logs):
+        date_str = datetime.fromisoformat(log["date"]).strftime("%m/%d/%Y")
+        
+        with st.expander(f"**{date_str}** - {log['duration']} hours"):
+            st.write(f"**Data Points:** {log['data_points']} points")
+            st.write(f"**Restlessness:** {log['restlessness']}/5")
+            st.write(f"**Sleep Phases:** {', '.join(log['phases'])}")
+
+# --- Reset/Clear All Button ---
+if st.button("🧹 Reset All (Clear Data)", type="secondary"):
+    # Remove data files if they exist
+    if os.path.exists(DATA_FILE):
+        os.remove(DATA_FILE)
+    if os.path.exists(STATE_FILE):
+        os.remove(STATE_FILE)
+    st.success("All data has been cleared. Please refresh the page.")
+    st.stop()

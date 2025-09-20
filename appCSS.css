@@ -1,0 +1,59 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* Base styles */
+html, body, [class*="st-emotion-cache"] {
+    font-family: 'Inter', sans-serif;
+}
+
+/* Dashboard card styles */
+.dashboard-card {
+    background-color: #fff;
+    padding: 24px;
+    border-radius: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    text-align: center;
+    margin-bottom: 24px;
+    border: 1px solid #e0e0e0;
+}
+
+/* Metrics card styles */
+.metrics-card {
+    background-color: #fff;
+    padding: 16px;
+    border-radius: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Card text styles */
+.card-title {
+    font-size: 1.1em;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.card-value {
+    font-size: 2.5em;
+    font-weight: 700;
+    color: #4a4a4a;
+    margin-top: 0;
+}
+
+/* Bear container with gradient */
+.bear-container {
+    background: linear-gradient(135deg, #FFC0CB, #FF69B4);
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Center Streamlit content */
+.st-emotion-cache-183q192 {
+    text-align: center;
+}
