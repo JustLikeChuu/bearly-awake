@@ -6,6 +6,8 @@ import os
 import base64
 from collections import Counter
 import matplotlib.pyplot as plt
+import json
+from google import genai
 
 # Load the CSS file
 def local_css(file_name):
@@ -205,6 +207,61 @@ with st.container(border=False):
         st.markdown("Sleep Phase: --")
         st.markdown("Noise: --")
 
+
+# --- Process Live JSON Data ---
+def get_json_data(file):
+    try:
+        with open(file, "r") as f:
+            data = json.load(f)
+            return data
+    except FileNotFoundError:
+        print("File {json} does not exist.")
+        return None
+    except Exception as e:
+        print(f"Error reading {json}: {e}")
+        return None
+    
+sleep_data = get_json_data('sleep_logs.json')
+
+def process_json_data(data):
+    counts = len(data)
+
+    # a ideal temp for sleeping is 36.5 degrees
+    temp_data = [record["temperature"] for record in data]
+    avg_temp = sum(temp_data) / counts
+    min_temp = min(temp_data)
+    max_temp = max(temp_data)
+
+    # noisy if score above 0.1
+    noise_level_score = (sum([1 for record in data if record["noise"] >= 560]) / counts)
+
+    # % of each sleep phase: light, deep, rem, awake
+    sleep_phase = [50, 30, 15, 5]
+
+    # % of times moved over entire sleep duration
+    movement_percentage = (sum([1 for record in data if record["movement"]]) / counts) * 100
+
+    # Create a string summary
+    summary_text = (
+        f"Sleep Data Summary:\n"
+        f"Total duration of tracked sleep: {counts * 12} minutes (based on 5-minute intervals).\n"
+        f"Noise score (anything over 0.1 is a noisy environment): {noise_level_score}.\n"
+        f"Sleep phase percentage in the orde of [light, deep, rem, awake]: {sleep_phase}\n"
+        f"Temperature during sleep:\n"
+        f" - Average: {avg_temp:.2f}°C\n"
+        f" - Minimum: {min_temp}°C\n"
+        f" - Maximum: {max_temp}°C\n"
+        f"Percentage of movement during the night: {movement_percentage:.2f} (lower is better for sleep quality, and more than 0.2 is bad)."
+    )
+    return summary_text
+
+if sleep_data:
+    sleep_summary = process_json_data(sleep_data)
+    if sleep_summary == None:
+        print("nothing in summary")
+    else:
+        print(sleep_summary)
+
 # --- AI Assistant ---
 st.markdown("---")
 with st.container(border=False):
@@ -222,25 +279,28 @@ with st.container(border=False):
         if not sleep_duration or sleep_duration <= 0:
             st.error("No recent sleep data available. Please log some sleep first.")
         else:
-            # Simulate AI logic for a personalized tip
-            tips = {
-                "low_duration": "Your duration was a bit low. Try to get to bed 30 minutes earlier tonight.",
-                "high_duration": "Great job! A longer sleep duration can do wonders for your health.",
-                "high_restlessness": "Feeling restless? Try a 10-minute meditation before bed to calm your mind.",
-                "low_restlessness": "A calm night! Consistency is key for deep, restorative sleep.",
-            }
-            tip_message = ""
-            if sleep_duration < 7.0:
-                tip_message = tips["low_duration"]
-            else:
-                tip_message = tips["high_duration"]
+            # Configure your API key
+            client = genai.Client(api_key="")
+
+            # Define the prompt for Gemini
+            prompt = (
+                f"You are a friendly AI sleep coach. Analyze the following sleep data "
+                f"and provide a personalized sleep tip and actionable suggestions to improve their next night's sleep. "
+                f"Keep it concise and encouraging.\n\n"
+                f"The user slept for a total of {sleep_duration} hours.\n"
+                f"Data Summary:\n{sleep_summary}"
+            )
+
+            # Get the response from Gemini
+            try:
+                response = client.models.generate_content(model="gemini-2.5-flash", contents=prompt)
+                ai_tip = response.text
+                st.success(f"**Personalized Tip:** {ai_tip}")
+            except Exception as e:
+                st.error(f"An error occurred while generating the tip: {e}")
+
+
             
-            if restlessness_score > 3:
-                tip_message += " " + tips["high_restlessness"]
-            else:
-                tip_message += " " + tips["low_restlessness"]
-            # Display messages
-            st.success(f"**Personalized Tip:** {tip_message}")
 
 # --- Sleep History & Analytics ---
 st.markdown("---")
