@@ -50,12 +50,12 @@ st.set_page_config(
 )
 
 # --- Header Section ---
-st.title("Bear-ly Awake")
-st.markdown("Your intelligent sleep companion")
+st.title("Bear-ly Awake 🐻")
+st.markdown("Your Intelligent Sleep Companion!")
 
 st.markdown("---")
 # --- Bear Container with Buttons ---
-with st.container(border=True):
+with st.container(border=False):
     col_img, col_buttons = st.columns([0.5, 2])
     
     with col_img:
@@ -63,93 +63,77 @@ with st.container(border=True):
     
     with col_buttons:
         st.write("") # Spacer
-        col_hug, col_sleep = st.columns(2)
-        with col_hug:
-            if st.button("❤️ Give Hug", use_container_width=True):
-                app_state["hug_count"] += 1
+        col_sleep = st.columns(2)
+        if not app_state["is_sleeping"]:
+            if st.button("🌙 Start Sleep", use_container_width=True):
+                app_state["is_sleeping"] = True
+                app_state["sleep_start_time"] = datetime.now()
                 save_state(app_state)
-        with col_sleep:
-            if not app_state["is_sleeping"]:
-                if st.button("🌙 Start Sleep", use_container_width=True):
-                    app_state["is_sleeping"] = True
-                    app_state["sleep_start_time"] = datetime.now()
-                    save_state(app_state)
-            else:
-                if st.button("💤 End Sleep", use_container_width=True, type="primary"):
-                    app_state["is_sleeping"] = False
-                    sleep_duration = (datetime.now() - app_state["sleep_start_time"]).total_seconds() / 3600
-                    restlessness = 2 # Placeholder for a real restlessness score
-                    
-                    # Logic to add the log
-                    new_log = {
-                        "date": datetime.now().isoformat(),
-                        "duration": round(sleep_duration, 2),
-                        "restlessness": restlessness,
-                        "data_points": 7, # Simulated data points
-                        "phases": ["light", "deep", "rem", "awake"] # Simulated phases
-                    }
-                    logs = load_data()
-                    logs.append(new_log)
-                    save_data(logs)
-                    
-                    app_state["sleep_start_time"] = None
-                    save_state(app_state)
+        else:
+            if st.button("💤 End Sleep", use_container_width=True, type="primary"):
+                app_state["is_sleeping"] = False
+                sleep_duration = (datetime.now() - app_state["sleep_start_time"]).total_seconds() / 3600
+                restlessness = 2 # Placeholder for a real restlessness score
+                
+                # Logic to add the log
+                new_log = {
+                    "date": datetime.now().isoformat(),
+                    "duration": round(sleep_duration, 2),
+                    "restlessness": restlessness,
+                    "data_points": 7, # Simulated data points
+                    "phases": ["light", "deep", "rem", "awake"] # Simulated phases
+                }
+                logs = load_data()
+                logs.append(new_log)
+                save_data(logs)
+                
+                app_state["sleep_start_time"] = None
+                save_state(app_state)
 
 # --- Key Metrics Section ---
 st.markdown("---")
 st.header("Dashboard")
 
-metrics_cols = st.columns(3)
 logs = load_data()
 avg_sleep = 0
 if logs:
     avg_sleep = sum(log['duration'] for log in logs) / len(logs)
 
-with metrics_cols[0]:
-    with st.container(border=True):
-        st.write("Avg Sleep")
-        st.title(f"😴 {round(avg_sleep, 1)}h")
-with metrics_cols[1]:
-    with st.container(border=True):
-        st.write("Temperature")
-        st.title("🌡️ 98.6°C")
-with metrics_cols[2]:
-    with st.container(border=True):
-        st.write("Total Hugs")
-        st.title(f"⚡️ {app_state['hug_count']}")
+with st.container(border=False):
+    st.write("Avg Sleep")
+    st.title(f"😴 {round(avg_sleep, 1)}h")
 
-# --- Live Sensors (Simulated) and AI Assistant ---
+# --- Live Sensors (Simulated) ---
 st.markdown("---")
-col_live, col_ai = st.columns(2)
+with st.container(border=False):
+    st.subheader("Live Sensors")
+    if app_state["is_sleeping"]:
+        st.success("MONITORING")
+        st.markdown("Heart Rate: **68 BPM**")
+        st.markdown("Temperature: **98.4°F**")
+        st.markdown("Movement: **3/10**")
+        st.markdown("Sleep Phase: **AWAKE**")
+        st.markdown("Noise: NONE")
+    else:
+        st.warning("Not monitoring.")
+        st.markdown("Heart Rate: --")
+        st.markdown("Temperature: --")
+        st.markdown("Movement: --")
+        st.markdown("Sleep Phase: --")
+        st.markdown("Noise: --")
 
-with col_live:
-    with st.container(border=True):
-        st.subheader("Live Sensors")
-        if app_state["is_sleeping"]:
-            st.success("MONITORING")
-            st.markdown("Heart Rate: **68 BPM**")
-            st.markdown("Temperature: **98.4°F**")
-            st.markdown("Movement: **3/10**")
-            st.markdown("Sleep Phase: **AWAKE**")
-            st.markdown("Noise: NONE")
-        else:
-            st.warning("Not monitoring.")
-            st.markdown("Heart Rate: --")
-            st.markdown("Temperature: --")
-            st.markdown("Movement: --")
-            st.markdown("Sleep Phase: --")
-            st.markdown("Noise: --")
-with col_ai:
-    with st.container(border=True):
-        st.subheader("AI Sleep Assistant")
-        if st.button("Generate Personalized Routine", use_container_width=True):
-            st.markdown("""
-            ### Personalized Routine
-            Based on your last few nights of sleep, we recommend the following:
-            - **Maintain a consistent bedtime:** Try to go to sleep around 10:30 PM.
-            - **Minimize screen time:** Avoid your phone for at least 30 minutes before bed.
-            - **Take a warm bath:** A warm bath can help you relax and fall asleep faster.
-            """)
+# --- AI Assistant ---
+st.markdown("---")
+with st.container(border=False):
+    st.subheader("AI Sleep Assistant")
+    if st.button("Generate Personalized Routine", use_container_width=True):
+        st.markdown("""
+        ### Personalized Routine
+        Based on your last few nights of sleep, we recommend the following:
+        - **Maintain a consistent bedtime:** Try to go to sleep around 10:30 PM.
+        - **Minimize screen time:** Avoid your phone for at least 30 minutes before bed.
+        - **Take a warm bath:** A warm bath can help you relax and fall asleep faster.
+        """)
 
 # --- Sleep History & Analytics ---
 st.markdown("---")
@@ -167,6 +151,8 @@ else:
             st.write(f"**Sleep Phases:** {', '.join(log['phases'])}")
 
 # --- Reset/Clear All Button ---
+st.markdown("---")
+
 if st.button("🧹 Reset All (Clear Data)", type="secondary"):
     # Remove data files if they exist
     if os.path.exists(DATA_FILE):
