@@ -79,7 +79,6 @@ st.markdown("Your Intelligent Sleep Companion!")
 st.markdown("---")
 
 # --- Bear Container with Buttons ---
-# --- Bear Container with Buttons ---
 with st.container(border=False):
     col1, col2, col3 = st.columns([1, 1, 1])
     with col2:
@@ -192,7 +191,6 @@ with st.container(border=False):
             st.success(f"**Personalized Tip:** {tip_message}")
             st.info(f"{uplifting_message}")
 
-
 # --- Sleep History & Analytics ---
 st.markdown("---")
 st.header("Sleep History & Analytics")
@@ -200,13 +198,18 @@ st.header("Sleep History & Analytics")
 if not logs:
     st.write("No sleep logs yet. Start tracking your sleep to see your history here!")
 else:
+    # Reverse logs to show latest first
     for i, log in enumerate(reversed(logs)):
-        date_str = datetime.fromisoformat(log["date"]).strftime("%m/%d/%Y")
-        label = f"{date_str} - {log['duration']}h #{i}-{log['date']}-{log['restlessness']}"
+        # Format date
+        date_str = datetime.fromisoformat(log["date"]).strftime("%m/%d/%Y %H:%M:%S")
+        # Make label unique by combining date, duration, and full timestamp
+        label = f"{date_str} - {log['duration']} hours"
+        # Create expander
         with st.expander(label, expanded=False):
             st.write(f"**Data Points:** {log['data_points']} points")
             st.write(f"**Restlessness:** {log['restlessness']}/5")
             st.write(f"**Sleep Phases:** {', '.join(log['phases'])}")
+
 
 # --- Reset/Clear All Button ---
 st.markdown("---")
