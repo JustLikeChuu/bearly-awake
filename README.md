@@ -1,6 +1,8 @@
 # Team weewoo
 Welcome to our group's WTH Project: Bear-ly Awake 🐻!
 
+![assets/bear image.jpg)](https://github.com/JustLikeChuu/bearly-awake/blob/main/assets/bear%20image.jpg?raw=true)
+
 # Scenario
 In a world filled with smartwatches and clinical sleep trackers, we believe that the journey to better sleep should be comforting, not intimidating. Bear-ly Awake is a concept for an intelligent, interactive plush companion designed to help you achieve restorative sleep by addressing both the physiological and emotional aspects of rest.
 
