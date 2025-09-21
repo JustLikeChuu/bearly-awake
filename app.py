@@ -250,7 +250,7 @@ with st.container(border=False):
         else:
             st.write("No data")
 
-    # --- Live Sensors (Simulated) ---
+    # --- Live Sensors ---
 st.markdown("---")
 with st.container(border=False):
     st.subheader("Live Sensors")
