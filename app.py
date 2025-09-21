@@ -286,8 +286,8 @@ with st.container(border=False):
                 st.markdown(f"Temperature: **{temp_str}**")
                 st.markdown(f"Movement: **{movement}**")
                 st.markdown(f"Sleep Phase: **{sleep_phase}**")
-                st.markdown(f"Noise: {noise_str}")
-                st.markdown("Restlessness: 3/5")
+                st.markdown(f"Noise: **{noise_str}**")
+                st.markdown("Restlessness: **3/5**")
             
             time.sleep(5)
     else:
