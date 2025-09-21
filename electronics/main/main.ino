@@ -2,6 +2,10 @@
 #include <Arduino.h>
 #include <Wire.h>
 
+// Temperature dependencies
+#include <OneWire.h>
+#include <DallasTemperature.h>
+
 // Time dependencies
 #include <WiFi.h>
 #include "time.h"
@@ -24,9 +28,12 @@ int readSound(int);
 #include <SPIFFS.h>
 
 // Pin definitions
-#define temperature_sensor_pin 16
-#define shock_sensor_pin 4
+#define temperature_sensor_pin 9
+#define shock_sensor_pin 17
 #define sound_sensor_pin 20
+
+OneWire oneWire(temperature_sensor_pin);
+DallasTemperature sensors(&oneWire);
 
 // Time setup
 const char* ssid = "pixel_9a";
@@ -35,6 +42,17 @@ const char* password = "qazwsxedc";
 void setup() {
     // Initialise serial communication
     Serial.begin(115200);
+
+    // Pin initialization
+    sensors.begin();
+    pinMode (shock_sensor_pin, INPUT);
+
+    // Initialize SPIFFS
+    if (!SPIFFS.begin(true)) {
+        Serial.println("An error occurred while mounting SPIFFS");
+        return;
+    }
+    Serial.println("SPIFFS mounted successfully");
 
     // Connect to Wi-Fi
     Serial.print("Connecting to ");
@@ -54,17 +72,17 @@ void setup() {
     printLocalTime();
 }
 
-char* printLocalTime(){
+String printLocalTime(){
     struct tm timeinfo;
     if(!getLocalTime(&timeinfo)){
-        char* msg = "Failed to obtain time";
+        String msg = "Failed to obtain time";
         return msg;
     }
     
     else{
-        char timeDate[21];
-        strftime(timeDate, sizeof(timeDate), "%y-%m-%d %H:%M:%S", &timeinfo);
-        return timeDate;
+        char timeDate[64];
+        strftime(timeDate, sizeof(timeDate), "%Y-%m-%d %H:%M:%S", &timeinfo);
+        return String(timeDate);
     }
 }
 
@@ -80,16 +98,38 @@ void loop() {
 
     // Create JSON object for logging
     JsonDocument doc;
-    JsonDocument data;
-    data["shock"] = shock;
-    data["temperature"] = temperature;
-    data["sound"] = sound;
+    doc["shock"] = shock;
+    doc["temperature"] = temperature;
+    doc["sound"] = sound;
     
-    char timeDate[21] = printLocalTime();
-    Serial.println(timeDate, "shock:", shock, "temperature:", temperature, "sound:", sound);
-    doc[timeDate] = data;
+    String timeDate = { printLocalTime() };
 
-    std::ofstream o("log.json");
+    Serial.print("'date':");
+    Serial.print(timeDate);
+    Serial.print(",");
+    Serial.print("'temperature':");
+    Serial.print(temperature);
+    Serial.print(",");
+    Serial.print("'shock':");
+    Serial.print(shock);
+    Serial.print(",");
+    Serial.print("'sound':");
+    Serial.print(sound);
+    Serial.println("");
+
+    doc["timestamp"] = timeDate;
+
+    // Append to SPIFFS file
+    File file = SPIFFS.open("/log.json", FILE_APPEND);
+    if (file) {
+        serializeJson(doc, file);
+        file.println(); // Add newline for each entry
+        file.close();
+    } else {
+        Serial.println("Failed to open file for writing");
+    }
+
+    // std::ofstream o("log.json");
     delay(5000);
 }
 
