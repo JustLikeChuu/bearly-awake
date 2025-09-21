@@ -7,12 +7,9 @@ In a world filled with smartwatches and clinical sleep trackers, we believe that
 Most modern solutions offer raw data without the human touch. Our project combines the warmth of a comforting object with the power of an AI-driven dashboard, creating a holistic experience that is as soothing as it is insightful.
 
 # Main Features
-- Interactive Comfort: 
-    - The dashboard includes an interactive "Give Hug" button that simulates the bear's comforting presence.
-
 - Simulated Sleep Tracking: 
-    - Users can start and end a sleep session, and the app will simulate and display live sensor data (Heart Rate, Temperature, and Movement).
-
+    - Users can start and end a sleep session, and the app will simulate and display live sensor data (Heart Rate, Temperature, and Movement etc.).
+    
 - AI Sleep Assistant: 
     - A dedicated section provides a personalized routine based on the simulated sleep data, showcasing the core value proposition of an AI-driven companion.
 
