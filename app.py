@@ -159,6 +159,7 @@ with st.container(border=False):
                     "date": datetime.now().isoformat(),
                     "duration": round(sleep_duration, 2),
                     "restlessness": restlessness,
+                    "phases": ["light", "deep", "rem", "awake"], # Placeholder
                     "noise": 1, # Placeholder
                     "temperature": 22, # Placeholder
                     "movement": 3, # Placeholder
@@ -257,6 +258,7 @@ with st.container(border=False):
         st.markdown("Heart Rate: **68 BPM**")
         st.markdown("Temperature: **98.4°F**")
         st.markdown("Movement: **3/10**")
+        st.markdown("Sleep Phase: **AWAKE**")
         st.markdown("Noise: NONE")
         st.markdown("Shock: 300")
         st.markdown("Sound: 560")
@@ -266,6 +268,7 @@ with st.container(border=False):
         st.markdown("Heart Rate: --")
         st.markdown("Temperature: --")
         st.markdown("Movement: --")
+        st.markdown("Sleep Phase: --")
         st.markdown("Noise: --")
         st.markdown("Shock: --")
         st.markdown("Sound: --")
@@ -327,6 +330,7 @@ else:
             st.write(f"**Noise Level:** {log.get('noise', 'N/A')}")
             st.write(f"**Temperature:** {log.get('temperature', 'N/A')}°C")
             st.write(f"**Movement:** {log.get('movement', 'N/A')}")
+            st.write(f"**Phases:** {', '.join(log.get('phases', [])) if log.get('phases') else 'N/A'}")
             st.write(f"**Shock Detected:** {log.get('shock', 'N/A')}")
             st.write(f"**Sound Value:** {log.get('sound', 'N/A')}")
 
