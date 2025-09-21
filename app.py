@@ -8,6 +8,7 @@ from collections import Counter
 import matplotlib.pyplot as plt
 import json
 from google import genai
+import random, time
 
 # Load the CSS file
 def local_css(file_name):
@@ -104,7 +105,7 @@ def process_json_data(data):
     # Create a string summary
     summary_text = (
         f"Sleep Data Summary:\n"
-        f"Total duration of tracked sleep: {counts * 12} minutes (based on 5-minute intervals).\n"
+        f"Total duration of tracked sleep: {counts /3600 } hours (based on 5-minute intervals).\n"
         f"Noise score (anything over 0.1 is a noisy environment): {noise_level_score}.\n"
         f"Sleep phase percentage in the orde of [light, deep, rem, awake]: {sleep_phase}\n"
         f"Temperature during sleep:\n"
@@ -167,7 +168,7 @@ with st.container(border=False):
                     "sound": 300, # Placeholder
                 }
                 logs = load_data()
-                logs.append(new_log)
+                # logs.append(new_log)
                 save_data(logs)
                 app_state["sleep_start_time"] = None
                 save_state(app_state)
@@ -255,14 +256,41 @@ with st.container(border=False):
     st.subheader("Live Sensors")
     if app_state["is_sleeping"]:
         st.success("MONITORING")
-        st.markdown("Heart Rate: **68 BPM**")
-        st.markdown("Temperature: **98.4°F**")
-        st.markdown("Movement: **3/10**")
-        st.markdown("Sleep Phase: **AWAKE**")
-        st.markdown("Noise: NONE")
-        st.markdown("Shock: 300")
-        st.markdown("Sound: 560")
-        st.markdown("Restlessness: 3/5")
+
+        live_json_file = "sleep_logs.json"
+
+        # Create a placeholder to hold the live metrics that is updated after every loop
+        placeholder = st.empty()
+
+        # Poll every 5 seconds using Streamlit's autorefresh
+        while True:
+            # Read latest entry from JSON
+            last_json_entry = get_json_data(live_json_file)[-1]
+            shock = last_json_entry['shock']
+            temperature = last_json_entry['temperature']
+            sound = last_json_entry['sound']
+
+            # Randomize heart rate between 60-80 BPM
+            heart_rate = random.randint(60, 80)
+            # Sleep phase hardcoded as 'light'
+            sleep_phase = "Light"
+            # Movement: show as 1/10 if shock True, else 0/10
+            movement = "Detected" if shock else "None"
+            # Temperature: show value if available
+            temp_str = f"{temperature}°C" if temperature is not None else "None"
+            # Noise: show 'NOISE' if sound >= 560, else 'NONE'
+            noise_str = "Detected" if sound is not None and sound >= 560 else "None"
+            
+            # Use the placeholder to update the UI
+            with placeholder.container():
+                st.markdown(f"Heart Rate: **{heart_rate} BPM**")
+                st.markdown(f"Temperature: **{temp_str}**")
+                st.markdown(f"Movement: **{movement}**")
+                st.markdown(f"Sleep Phase: **{sleep_phase}**")
+                st.markdown(f"Noise: {noise_str}")
+                st.markdown("Restlessness: 3/5")
+            
+            time.sleep(5)
     else:
         st.warning("Not monitoring.")
         st.markdown("Heart Rate: --")
@@ -284,7 +312,9 @@ with st.container(border=False):
     restlessness_score = None
     if logs:
         last_log = logs[-1]
+        print(last_log)
         sleep_duration = last_log.get("duration", 0)
+        print(sleep_duration)
         restlessness_score = last_log.get("restlessness", 2)  # Default to 2 if not present
 
     if log_button:
@@ -292,13 +322,13 @@ with st.container(border=False):
             st.error("No recent sleep data available. Please log some sleep first.")
         else:
             # Configure your API key
-            client = genai.Client(api_key="")
+            client = genai.Client(api_key="") #removed for privacy reasons
 
             # Define the prompt for Gemini
             prompt = (
-                f"You are a friendly AI sleep coach. Analyze the following sleep data "
+                f"You are a friendly bear AI sleep coach of our Bear-ly Awake app. Analyze the following sleep data"
                 f"and provide a personalized sleep tip and actionable suggestions to improve their next night's sleep. "
-                f"Keep it concise and encouraging.\n\n"
+                f"Keep it concise and encouraging while considering all the data given.\n\n"
                 f"The user slept for a total of {sleep_duration} hours.\n"
                 f"Data Summary:\n{sleep_summary}"
             )
