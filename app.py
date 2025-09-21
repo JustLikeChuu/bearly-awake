@@ -5,9 +5,9 @@ import streamlit as st
 from collections import Counter
 from google import genai
 import matplotlib.pyplot as plt
-import json
 from google import genai
 import random, time
+from datetime import datetime
 
 # Load the CSS file
 def local_css(file_name):
