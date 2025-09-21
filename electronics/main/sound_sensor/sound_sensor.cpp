@@ -1,9 +1,9 @@
 // int buttonpin = 12; // define D0 Sensor Interface
-int soundVal = 0;// define numeric variables val
+int soundValue = 0;// define numeric variables val
 int soundIn;
 
-int readSound(soundIn){
-    int soundValue = analogRead(soundIn); // Read the analog value from the Sound Sensor
+int readSound(int soundIn){
+    soundValue = analogRead(soundIn); // Read the analog value from the Sound Sensor
     return soundValue;
 }
 
