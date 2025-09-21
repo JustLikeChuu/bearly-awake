@@ -1,6 +1,8 @@
 # Team weewoo
 Welcome to our group's WTH Project: Bear-ly Awake 🐻!
 
+![assets/bear image.jpg)](https://github.com/JustLikeChuu/bearly-awake/blob/main/assets/bear%20image.jpg?raw=true)
+
 # Scenario
 In a world filled with smartwatches and clinical sleep trackers, we believe that the journey to better sleep should be comforting, not intimidating. Bear-ly Awake is a concept for an intelligent, interactive plush companion designed to help you achieve restorative sleep by addressing both the physiological and emotional aspects of rest.
 
@@ -17,7 +19,7 @@ Most modern solutions offer raw data without the human touch. Our project combin
     - All simulated sleep sessions are logged and stored persistently. The dashboard provides an easy-to-use interface to review past sleep logs and analyze trends.
 
 # Group Members
-- Nicholas Wee(Group Leader)
+- Nicholas Wee (Group Leader)
 - Ethan Ng
 - Jacelyn Tan
 - Ang Ke Jin (Jonathan)
