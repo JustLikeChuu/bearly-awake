@@ -33,6 +33,7 @@ local_css("appCSS.css")
 set_bg_from_local("assets/background.png")
 
 # --- Helper Functions for Data Storage ---
+#everything JSON is below here
 DATA_FILE = "sleep_logs.json"
 STATE_FILE = "app_state.json"
 
@@ -51,7 +52,7 @@ def save_data(data):
 def load_state():
     """Loads app state from a JSON file."""
     if not os.path.exists(STATE_FILE):
-        return {"is_sleeping": False, "hug_count": 0, "sleep_start_time": None}
+        return {"is_sleeping": False, "sleep_start_time": None}
     with open(STATE_FILE, "r") as f:
         state = json.load(f)
         # Convert sleep_start_time back to datetime object
@@ -67,6 +68,62 @@ def save_state(state):
     with open(STATE_FILE, "w") as f:
         json.dump(state, f, indent=4)
 
+# --- Process Live JSON Data ---
+def get_json_data(file):
+    try:
+        with open(file, "r") as f:
+            data = json.load(f)
+            return data
+    except FileNotFoundError:
+        print("File {json} does not exist.")
+        return None
+    except Exception as e:
+        print(f"Error reading {json}: {e}")
+        return None
+    
+sleep_data = get_json_data('sleep_logs.json')
+
+def process_json_data(data):
+    counts = len(data)
+
+    # a ideal temp for sleeping is 36.5 degrees
+    temp_data = [record["temperature"] for record in data]
+    avg_temp = sum(temp_data) / counts
+    min_temp = min(temp_data)
+    max_temp = max(temp_data)
+
+    # noisy if score above 0.1
+    noise_level_score = (sum([1 for record in data if record["sound"] >= 560]) / counts)
+
+    # % of each sleep phase: light, deep, rem, awake
+    sleep_phase = [50, 30, 15, 5]
+
+    # % of times moved over entire sleep duration
+    movement_percentage = (sum([1 for record in data if record["shock"]]) / counts) * 100
+
+    # Create a string summary
+    summary_text = (
+        f"Sleep Data Summary:\n"
+        f"Total duration of tracked sleep: {counts * 12} minutes (based on 5-minute intervals).\n"
+        f"Noise score (anything over 0.1 is a noisy environment): {noise_level_score}.\n"
+        f"Sleep phase percentage in the orde of [light, deep, rem, awake]: {sleep_phase}\n"
+        f"Temperature during sleep:\n"
+        f" - Average: {avg_temp:.2f}°C\n"
+        f" - Minimum: {min_temp}°C\n"
+        f" - Maximum: {max_temp}°C\n"
+        f"Percentage of movement during the night: {movement_percentage:.2f} (lower is better for sleep quality, and more than 0.2 is bad)."
+    )
+    return summary_text
+
+if sleep_data:
+    sleep_summary = process_json_data(sleep_data)
+    if sleep_summary == None:
+        #print("Nothing in Summary")
+        sleep_summary = "No summary available."
+    else:
+        #print(sleep_summary)
+        pass
+#start of app
 # --- App Initialization and State Management ---
 app_state = load_state()
 
@@ -102,8 +159,11 @@ with st.container(border=False):
                     "date": datetime.now().isoformat(),
                     "duration": round(sleep_duration, 2),
                     "restlessness": restlessness,
-                    "data_points": 7,
-                    "phases": ["light", "deep", "rem", "awake"]
+                    "noise": 1, # Placeholder
+                    "temperature": 22, # Placeholder
+                    "movement": 3, # Placeholder
+                    "shock": False, # Placeholder
+                    "sound": 300, # Placeholder
                 }
                 logs = load_data()
                 logs.append(new_log)
@@ -197,70 +257,19 @@ with st.container(border=False):
         st.markdown("Heart Rate: **68 BPM**")
         st.markdown("Temperature: **98.4°F**")
         st.markdown("Movement: **3/10**")
-        st.markdown("Sleep Phase: **AWAKE**")
         st.markdown("Noise: NONE")
+        st.markdown("Shock: 300")
+        st.markdown("Sound: 560")
+        st.markdown("Restlessness: 3/5")
     else:
         st.warning("Not monitoring.")
         st.markdown("Heart Rate: --")
         st.markdown("Temperature: --")
         st.markdown("Movement: --")
-        st.markdown("Sleep Phase: --")
         st.markdown("Noise: --")
-
-
-# --- Process Live JSON Data ---
-def get_json_data(file):
-    try:
-        with open(file, "r") as f:
-            data = json.load(f)
-            return data
-    except FileNotFoundError:
-        print("File {json} does not exist.")
-        return None
-    except Exception as e:
-        print(f"Error reading {json}: {e}")
-        return None
-    
-sleep_data = get_json_data('sleep_logs.json')
-
-def process_json_data(data):
-    counts = len(data)
-
-    # a ideal temp for sleeping is 36.5 degrees
-    temp_data = [record["temperature"] for record in data]
-    avg_temp = sum(temp_data) / counts
-    min_temp = min(temp_data)
-    max_temp = max(temp_data)
-
-    # noisy if score above 0.1
-    noise_level_score = (sum([1 for record in data if record["sound"] >= 560]) / counts)
-
-    # % of each sleep phase: light, deep, rem, awake
-    sleep_phase = [50, 30, 15, 5]
-
-    # % of times moved over entire sleep duration
-    movement_percentage = (sum([1 for record in data if record["shock"]]) / counts) * 100
-
-    # Create a string summary
-    summary_text = (
-        f"Sleep Data Summary:\n"
-        f"Total duration of tracked sleep: {counts * 12} minutes (based on 5-minute intervals).\n"
-        f"Noise score (anything over 0.1 is a noisy environment): {noise_level_score}.\n"
-        f"Sleep phase percentage in the orde of [light, deep, rem, awake]: {sleep_phase}\n"
-        f"Temperature during sleep:\n"
-        f" - Average: {avg_temp:.2f}°C\n"
-        f" - Minimum: {min_temp}°C\n"
-        f" - Maximum: {max_temp}°C\n"
-        f"Percentage of movement during the night: {movement_percentage:.2f} (lower is better for sleep quality, and more than 0.2 is bad)."
-    )
-    return summary_text
-
-if sleep_data:
-    sleep_summary = process_json_data(sleep_data)
-    if sleep_summary == None:
-        print("nothing in summary")
-    else:
-        print(sleep_summary)
+        st.markdown("Shock: --")
+        st.markdown("Sound: --")
+        st.markdown("Restlessness: --")
 
 # --- AI Assistant ---
 st.markdown("---")
@@ -298,9 +307,6 @@ with st.container(border=False):
                 st.success(f"**Personalized Tip:** {ai_tip}")
             except Exception as e:
                 st.error(f"An error occurred while generating the tip: {e}")
-
-
-            
 
 # --- Sleep History & Analytics ---
 st.markdown("---")
