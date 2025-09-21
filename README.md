@@ -19,7 +19,7 @@ Most modern solutions offer raw data without the human touch. Our project combin
     - All simulated sleep sessions are logged and stored persistently. The dashboard provides an easy-to-use interface to review past sleep logs and analyze trends.
 
 # Group Members
-- Nicholas Wee(Group Leader)
+- Nicholas Wee (Group Leader)
 - Ethan Ng
 - Jacelyn Tan
 - Ang Ke Jin (Jonathan)
