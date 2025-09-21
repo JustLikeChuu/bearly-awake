@@ -1,13 +1,11 @@
-import streamlit as st
-import pandas as pd
-import json
-from datetime import datetime, timedelta
 import os
 import base64
-from collections import Counter
-import matplotlib.pyplot as plt
 import json
+import streamlit as st
+from collections import Counter
 from google import genai
+import matplotlib.pyplot as plt
+from datetime import datetime
 
 # Load the CSS file
 def local_css(file_name):
@@ -259,10 +257,10 @@ with st.container(border=False):
         st.markdown("Temperature: **98.4°F**")
         st.markdown("Movement: **3/10**")
         st.markdown("Sleep Phase: **AWAKE**")
-        st.markdown("Noise: NONE")
-        st.markdown("Shock: 300")
-        st.markdown("Sound: 560")
-        st.markdown("Restlessness: 3/5")
+        st.markdown("Noise: **NONE**")
+        st.markdown("Shock: **300**")
+        st.markdown("Sound: **560**")
+        st.markdown("Restlessness: **3/5**")
     else:
         st.warning("Not monitoring.")
         st.markdown("Heart Rate: --")
