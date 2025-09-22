@@ -29,6 +29,7 @@ Most modern solutions offer raw data without the human touch. Our project combin
 - [**Python**](https://www.python.org/)
 - [**JSON**](https://json.org)
 - [**Streamlit**](https://https://streamlit.io/)
+- [**Gemini API**](https://ai.google.dev/)
 - [**Arduino IDE**](https://www.arduino.cc/en/software/)
 
 # Online Archive 
